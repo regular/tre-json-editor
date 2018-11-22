@@ -5,8 +5,8 @@ const setStyle = require('module-styles')('tre-json-editor')
 const ace = require('brace')
 require('brace/mode/json')
 
-
 module.exports = function RenderEditor(ssb, opts) {
+  opts = opts || {}
 
   setStyle(`
     .tre-json-editor pre.editor {
@@ -16,6 +16,7 @@ module.exports = function RenderEditor(ssb, opts) {
   `)
 
   return function renderEditor(kv, ctx) {
+    ctx = ctx || {}
     const content = kv.value && kv.value.content
     const json = JSON.stringify(content, null, 2)
     const pre = h('pre.editor', json)
