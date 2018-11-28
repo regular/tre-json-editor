@@ -18,8 +18,14 @@ const renderEditor = Editor(null, {
     tabSize: 2,
     useSoftTabs: true
   },
-  save: content => {
-    console.log('new content', content)
+  save: (kv, cb) => {
+    console.log('new kv', kv)
+    cb(null, {
+      key: kv.key,
+      value: {
+        content: Object.assign({}, kv.value.content, {saved: true})
+      }
+    })
   }
 })
 
