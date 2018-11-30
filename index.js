@@ -10,7 +10,7 @@ module.exports = function RenderEditor(ssb, opts) {
 
   setStyle(`
     .tre-json-editor pre.editor {
-      width: 90%;
+      width: 100%;
       min-height: 200px;
     }
   `)
@@ -22,12 +22,13 @@ module.exports = function RenderEditor(ssb, opts) {
     const pre = h('pre.editor', json)
 
     const annotation = Value()
-    const syntaxError = Value()
+    const syntaxError = ctx.syntaxErrorObs || Value()
     const value = ctx.contentObs || Value(content)
     const problem = computed([annotation, syntaxError], (a, e) => {
       return a || e
     })
 
+    value.set(content)
     const editor = ace.edit(pre)
     if (opts.ace) editor.setOptions(opts.ace)
     editor.session.setMode('ace/mode/json')
