@@ -5,6 +5,11 @@ const setStyle = require('module-styles')('tre-json-editor')
 const ace = require('brace')
 require('brace/mode/json')
 
+const getAST = require('json-to-ast')
+const {diff} = require('json8-patch')
+const pointer = require('json8-pointer')
+const locateProperty = require('./locate-property')
+
 module.exports = function RenderEditor(ssb, opts) {
   opts = opts || {}
 
@@ -47,6 +52,37 @@ module.exports = function RenderEditor(ssb, opts) {
       }
     })
 
+    function setNewContent(newContent) {
+      const oldContent = value()
+      const operations = diff(oldContent, newContent) 
+      console.warn(operations)
+      let text = editor.session.getValue()
+      const ast = getAST(text, {loc: true})
+
+      for(let {op, path, value} of operations) {
+        path = pointer.decode(path)
+        console.warn(op, path, value)
+        let newText
+        if (op == 'replace') {
+          const loc = locateProperty(ast, path)
+          const before = text.substr(0, loc.start.offset)
+          const after = text.substr(loc.end.offset)
+          newText = before +
+            `${
+              JSON.stringify(path.slice(-1)[0])
+            }: ${
+              JSON.stringify(value)
+            }` + after
+          console.log('new text', newText)
+        } else {
+          throw new Error('Unsupported operation: ' + op)
+        }
+        text = newText
+      }
+      editor.session.setValue(text)
+      value.set(newContent)
+    }
+
     return h('.tre-json-editor', {
       attributes: {
         'data-key': kv.key
@@ -56,18 +92,17 @@ module.exports = function RenderEditor(ssb, opts) {
       h('button', {
         'ev-click': e => {
           if (opts.save) {
+            const content = Object.assign({}, value())
             opts.save({
               key: kv.key,
               value: {
-                content: value()
+                content
               }
             }, (err, new_kv) => {
               if (err) return
               kv = new_kv
-              const content = kv.value.content
-              value.set(content)
-              const json = JSON.stringify(content, null, 2)
-              editor.session.setValue(json)
+              const newContent = kv.value.content
+              setNewContent(newContent)
             })
           }
         }
