@@ -2,6 +2,8 @@ const getAST = require('json-to-ast')
 const pointer = require('json8-pointer')
 const locateProperty = require('./locate-property')
 
+// TODO: detect formatting style of parent object for 'add'
+
 /*
  * Add: add a value into an object or array.
  * Remove: remove a value from an object or array.

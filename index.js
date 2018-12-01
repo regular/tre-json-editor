@@ -56,7 +56,15 @@ module.exports = function RenderEditor(ssb, opts) {
       console.warn(operations)
       let text = editor.session.getValue()
       const newText = patch(text, operations)
+
+
+      const currentPosition = editor.selection.getCursor()
+      const scrollTop = editor.session.getScrollTop()
       editor.session.setValue(newText)
+      editor.clearSelection()
+      editor.gotoLine(currentPosition.row + 1, currentPosition.column);
+      editor.session.setScrollTop(scrollTop)
+
       value.set(newContent)
     }
 
