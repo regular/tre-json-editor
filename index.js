@@ -3,12 +3,10 @@ const Value = require('mutant/value')
 const computed = require('mutant/computed')
 const setStyle = require('module-styles')('tre-json-editor')
 const ace = require('brace')
+const patch = require('./patch')
 require('brace/mode/json')
 
-const getAST = require('json-to-ast')
 const {diff} = require('json8-patch')
-const pointer = require('json8-pointer')
-const locateProperty = require('./locate-property')
 
 module.exports = function RenderEditor(ssb, opts) {
   opts = opts || {}
@@ -57,29 +55,8 @@ module.exports = function RenderEditor(ssb, opts) {
       const operations = diff(oldContent, newContent) 
       console.warn(operations)
       let text = editor.session.getValue()
-      const ast = getAST(text, {loc: true})
-
-      for(let {op, path, value} of operations) {
-        path = pointer.decode(path)
-        console.warn(op, path, value)
-        let newText
-        if (op == 'replace') {
-          const loc = locateProperty(ast, path)
-          const before = text.substr(0, loc.start.offset)
-          const after = text.substr(loc.end.offset)
-          newText = before +
-            `${
-              JSON.stringify(path.slice(-1)[0])
-            }: ${
-              JSON.stringify(value)
-            }` + after
-          console.log('new text', newText)
-        } else {
-          throw new Error('Unsupported operation: ' + op)
-        }
-        text = newText
-      }
-      editor.session.setValue(text)
+      const newText = patch(text, operations)
+      editor.session.setValue(newText)
       value.set(newContent)
     }
 

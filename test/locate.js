@@ -1,5 +1,5 @@
 const getAST = require('json-to-ast')
-const locateProperty = require('./locate-property')
+const locateProperty = require('../locate-property')
 const test = require('tape')
 
 test('root object', t => {
