@@ -138,3 +138,128 @@ test('Copy item in array', t => {
   ]), '[1, 3, 1]')
   t.end()
 })
+
+// -- formatting
+
+
+test('Add to empty object with newlines', t => {
+  const text = '{\n}'
+  t.equal(patch(text, [
+    {op: 'add', path: '/a', value: 1}
+  ]), 
+`{
+  "a": 1
+}`)
+  t.end()
+})
+
+test('Add to empty object with newlines and indentation', t => {
+  const text = '  {\n  }'
+  t.equal(patch(text, [
+    {op: 'add', path: '/a', value: 1}
+  ]), 
+`  {
+    "a": 1
+  }`)
+  t.end()
+})
+
+
+test('Add to non-empty object with newlines', t => {
+  const text = '{\n  "a": 1\n}'
+  t.equal(patch(text, [
+    {op: 'add', path: '/b', value: 2}
+  ]), 
+`{
+  "a": 1,
+  "b": 2
+}`)
+  t.end()
+})
+
+test('Add to non-empty object with newlines and indentation', t => {
+  const text = '  {\n    "a": 1\n  }'
+  t.equal(patch(text, [
+    {op: 'add', path: '/b', value: 2}
+  ]), 
+`  {
+    "a": 1,
+    "b": 2
+  }`)
+  t.end()
+})
+
+// -- array formatting (append)
+
+test('Append to empty array with newlines', t => {
+  const text = '[\n]'
+  t.equal(patch(text, [
+    {op: 'add', path: '/0', value: 1}
+  ]), 
+`[
+  1
+]`)
+  t.end()
+})
+
+test('Append to empty array with newlines and indentation', t => {
+  const text = '  [\n  ]'
+  t.equal(patch(text, [
+    {op: 'add', path: '/0', value: 1}
+  ]), 
+`  [
+    1
+  ]`)
+  t.end()
+})
+
+test('Append to non-empty array with newlines', t => {
+  const text = '[\n  1\n]'
+  t.equal(patch(text, [
+    {op: 'add', path: '/1', value: 2}
+  ]), 
+`[
+  1,
+  2
+]`)
+  t.end()
+})
+
+test('Append to non-empty array with newlines and indentation', t => {
+  const text = '  [\n    1\n  ]'
+  t.equal(patch(text, [
+    {op: 'add', path: '/-', value: 2}
+  ]), 
+`  [
+    1,
+    2
+  ]`)
+  t.end()
+})
+
+// -- array formatting (insert)
+
+test('Insert into non-empty array with newlines', t => {
+  const text = '[\n  1\n]'
+  t.equal(patch(text, [
+    {op: 'add', path: '/0', value: 2}
+  ]), 
+`[
+  2,
+  1
+]`)
+  t.end()
+})
+
+test('Insert into non-empty array with newlines and indentation', t => {
+  const text = '  [\n    1\n  ]'
+  t.equal(patch(text, [
+    {op: 'add', path: '/0', value: 2}
+  ]), 
+`  [
+    2,
+    1
+  ]`)
+  t.end()
+})
+

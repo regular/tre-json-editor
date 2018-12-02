@@ -1,8 +1,10 @@
 const getAST = require('json-to-ast')
 const pointer = require('json8-pointer')
 const locateProperty = require('./locate-property')
+const indentString = require('indent-string')
 
 // TODO: detect formatting style of parent object for 'add'
+// TODO: in move, is path applied to obj before or after remove?
 
 /*
  * Add: add a value into an object or array.
@@ -50,22 +52,42 @@ module.exports = function patch(text, operations) {
       }
       // we now have the parent's location in parent_loc
       const name = path.slice(-1)[0]
-      const parent = JSON.parse(
-        text.substr(parent_loc.start.offset, parent_loc.end.offset - parent_loc.start.offset)
-      )
+      const parent_str = text.substr(parent_loc.start.offset, parent_loc.end.offset - parent_loc.start.offset)
+      const parent = JSON.parse(parent_str)
+      const hasNewlines = /\n|\r/.test(parent_str)
       const isEmpty = Object.keys(parent).length == 0
+
+      console.log('parent loc', parent_loc)
+      const parent_lines = text.split('\n').slice(
+        parent_loc.start.line - 1,
+        parent_loc.end.line - parent_loc.start.line + 1
+      )
+      console.log('parent lines', parent_lines)
+      let indent = getIndentationLevel(parent_lines.join('/n'))
+      console.log(parent_str, 'indenteation level', indent)
       const isArray = Array.isArray(parent)
       if (!isArray && parent.hasOwnProperty(name)) {
         throw new Error('Cannot add duplicate key: ' + name)
       }
       let v = JSON.stringify(value)
       if (!isArray) v = `${JSON.stringify(name)}: ` + v
-      if (isArray && !isEmpty && name !== '-') v = v + ', '
-      else if (!isEmpty) v = ', ' + v
+      
+      const separator = hasNewlines ? ',\n'+ spaces(indent + 2) : ', '
+      const insertBefore = isArray && !isEmpty && name !== '-' && Number(name) < parent.length
+      const insertAfter = !insertBefore && !isEmpty
+
+      if (insertBefore) v = v + separator
+      else if (insertAfter)  v = separator + v
+      else if (hasNewlines) v = '\n' + spaces(indent + 2) + v + '\n' + spaces(indent)
+
+      if (!isEmpty && insertAfter && hasNewlines) {
+        v += '\n' + spaces(indent)
+      }
 
       let prolog, epilog
       // default: insert right before closing token
       prolog = text.substr(0, parent_loc.end.offset - 1)
+      if (hasNewlines) prolog = prolog.replace(/[\n| ]+$/, '')
       epilog = text.substr(parent_loc.end.offset - 1)
       if (isArray && name !== '-') {
         const loc = locateProperty(ast, path)
@@ -105,4 +127,15 @@ module.exports = function patch(text, operations) {
     text = newText
   }
   return text
+}
+
+function getIndentationLevel(str) {
+  // copied from strip-indent
+	const match = str.match(/^[ \t]*(?=\S)/gm)
+	if (!match) return 0
+	return Math.min.apply(Math, match.map(x => x.length))
+}
+
+function spaces(indent) {
+  return Array(indent).fill(' ').join('')
 }
