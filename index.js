@@ -35,6 +35,7 @@ module.exports = function RenderEditor(ssb, opts) {
 
     value.set(content)
     const editor = ace.edit(pre)
+    editor.$blockScrolling = Infinity
     if (opts.ace) editor.setOptions(opts.ace)
     editor.session.setMode('ace/mode/json')
 
