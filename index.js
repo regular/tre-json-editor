@@ -1,8 +1,10 @@
 const h = require('mutant/html-element')
 const Value = require('mutant/value')
 const computed = require('mutant/computed')
+const watch = require('mutant/watch')
 const setStyle = require('module-styles')('tre-json-editor')
 const ace = require('brace')
+const deepEqual = require('deep-equal')
 const patch = require('./patch')
 require('brace/mode/json')
 
@@ -51,12 +53,17 @@ module.exports = function RenderEditor(ssb, opts) {
     })
 
     function setNewContent(newContent) {
-      const oldContent = value()
+      let oldContent
+      try {
+        oldContent = JSON.parse(editor.session.getValue())
+      } catch(e) {
+        return console.error(e)
+      }
+      if (deepEqual(newContent, oldContent)) return
       const operations = diff(oldContent, newContent) 
       console.warn(operations)
       let text = editor.session.getValue()
       const newText = patch(text, operations)
-
 
       const currentPosition = editor.selection.getCursor()
       const scrollTop = editor.session.getScrollTop()
@@ -64,11 +71,14 @@ module.exports = function RenderEditor(ssb, opts) {
       editor.clearSelection()
       editor.gotoLine(currentPosition.row + 1, currentPosition.column);
       editor.session.setScrollTop(scrollTop)
-
-      value.set(newContent)
     }
 
+    const abort = watch(value, newContent => {
+      setNewContent(newContent)
+    })
+
     return h('.tre-json-editor', {
+      hooks: [el => abort],
       attributes: {
         'data-key': kv.key
       }
@@ -87,7 +97,7 @@ module.exports = function RenderEditor(ssb, opts) {
               if (err) return
               kv = new_kv
               const newContent = kv.value.content
-              setNewContent(newContent)
+              value.set(newContent)
             })
           }
         }

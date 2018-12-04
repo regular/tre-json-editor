@@ -19,6 +19,7 @@
   "homepage": "https://github.com/regular/tre-json-editor#readme",
   "dependencies": {
     "brace": "^0.11.1",
+    "deep-equal": "^1.0.1",
     "indent-string": "^3.2.0",
     "json-to-ast": "^2.0.5",
     "json8-patch": "^0.4.1",

@@ -57,14 +57,11 @@ module.exports = function patch(text, operations) {
       const hasNewlines = /\n|\r/.test(parent_str)
       const isEmpty = Object.keys(parent).length == 0
 
-      console.log('parent loc', parent_loc)
       const parent_lines = text.split('\n').slice(
         parent_loc.start.line - 1,
-        parent_loc.end.line - parent_loc.start.line + 1
+        parent_loc.end.line
       )
-      console.log('parent lines', parent_lines)
       let indent = getIndentationLevel(parent_lines.join('/n'))
-      console.log(parent_str, 'indenteation level', indent)
       const isArray = Array.isArray(parent)
       if (!isArray && parent.hasOwnProperty(name)) {
         throw new Error('Cannot add duplicate key: ' + name)
