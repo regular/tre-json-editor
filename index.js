@@ -85,24 +85,6 @@ module.exports = function RenderEditor(ssb, opts) {
       }
     }, [
       pre,
-      h('button', {
-        'ev-click': e => {
-          if (opts.save) {
-            const content = Object.assign({}, value())
-            opts.save({
-              key: kv.key,
-              value: {
-                content
-              }
-            }, (err, new_kv) => {
-              if (err) return
-              kv = new_kv
-              const newContent = kv.value.content
-              value.set(newContent)
-            })
-          }
-        }
-      }, 'Apply'),
       h('span', problem)
     ])
   }
