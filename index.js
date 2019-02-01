@@ -28,12 +28,12 @@ module.exports = function RenderEditor(ssb, opts) {
 
     const annotation = Value()
     const syntaxError = ctx.syntaxErrorObs || Value()
-    const value = ctx.contentObs || Value(content)
+    const value = ctx.contentObs || Value()
     const problem = computed([annotation, syntaxError], (a, e) => {
       return a || e
     })
+    value.set(unmergeKv(kv).value.content)
 
-    value.set(content)
     const editor = ace.edit(pre)
     editor.$blockScrolling = Infinity
     if (opts.ace) editor.setOptions(opts.ace)
@@ -117,3 +117,8 @@ function debounce(ms, f) {
   }
 }
 
+function unmergeKv(kv) {
+  // if the message has prototypes and they were merged into this message value,
+  // return the unmerged/original value
+  return kv && kv.meta && kv.meta['prototype-chain'] && kv.meta['prototype-chain'][0] || kv
+}
