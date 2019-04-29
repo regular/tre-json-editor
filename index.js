@@ -22,17 +22,17 @@ module.exports = function RenderEditor(ssb, opts) {
 
   return function renderEditor(kv, ctx) {
     ctx = ctx || {}
-    const content = kv.value && kv.value.content
+    // we don't show inherited properties, so we have to 'unmerge'
+    const content = unmergeKv(kv).value.content
     const json = JSON.stringify(content, null, 2)
     const pre = h('pre.editor', json)
 
     const annotation = Value()
     const syntaxError = ctx.syntaxErrorObs || Value()
-    const value = ctx.contentObs || Value()
+    const value = ctx.contentObs || Value(content)
     const problem = computed([annotation, syntaxError], (a, e) => {
       return a || e
     })
-    value.set(unmergeKv(kv).value.content)
 
     const editor = ace.edit(pre)
     editor.$blockScrolling = Infinity
@@ -41,7 +41,9 @@ module.exports = function RenderEditor(ssb, opts) {
 
     editor.session.on('change', Changes(editor, 600, (err, content) => {
       syntaxError.set(err && err.message)
-      if (!err) value.set(content)
+      if (!err) {
+        value.set(content)
+      }
     }))
     
     editor.session.on('changeAnnotation', () => {
@@ -62,7 +64,7 @@ module.exports = function RenderEditor(ssb, opts) {
       }
       if (deepEqual(newContent, oldContent)) return
       const operations = diff(oldContent, newContent) 
-      console.warn(operations)
+      console.warn('operations:', operations)
       let text = editor.session.getValue()
       const newText = patch(text, operations)
 
